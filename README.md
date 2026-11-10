@@ -4,6 +4,25 @@ A terminal-based application launcher and app-nickname tool for Linux.
 
 Search Dat Term lets you find installed desktop applications from a terminal using [fzf](https://github.com/junegunn/fzf), launch them, and create short shell commands (nicknames) for applications you use often.
 
+## Navigation
+
+- [Features](#features)
+- [Requirements](#requirements)
+- [Install](#install)
+- [Commands](#commands)
+- [Nicknames](#nicknames)
+- [Compact Kitty popup](#compact-kitty-popup)
+  - [Hyprland setup](#hyprland)
+  - [KDE Plasma 6 setup](#kde-plasma-6-kwin)
+  - [Other desktop environments and window managers](#other-desktop-environments-and-window-managers)
+  - [Changing popup size](#changing-the-popup-size)
+  - [Planned automatic desktop integration](#future-desktop-integration)
+- [Application discovery](#application-discovery)
+  - [Troubleshooting missing applications](#if-an-application-does-not-appear)
+- [Desktop environment notes](#desktop-environment)
+- [Testing status](#testing-status)
+- [Contributing](#contributing)
+
 ## Features
 
 - **Terminal app search** — interactively search installed desktop applications with fzf.
@@ -36,6 +55,8 @@ bash install.sh
 The installer places commands in `~/.local/bin`, the shared helper library and popup shell config under `$XDG_DATA_HOME/search-dat-term` (or `~/.local/share/search-dat-term`), and a desktop launcher at `$XDG_DATA_HOME/applications/search-dat-term-popup.desktop`. The desktop launcher contains the actual installed path to `sdt-popup`, so KDE and other desktop shortcut tools do not have to find it through their own PATH.
 
 Make sure `~/.local/bin` is in your shell's PATH. You can override the command installation directory by setting `SDT_BIN_DIR` before running the installer.
+
+### Commands
 
 | Command | Purpose |
 | --- | --- |
