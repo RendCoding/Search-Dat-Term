@@ -31,13 +31,13 @@ cp "$SCRIPT_DIR/lib/search-dat-term.sh" "$DATA_DIR/search-dat-term.sh"
 cp "$SCRIPT_DIR/share/sdt-popup.bashrc" "$DATA_DIR/sdt-popup.bashrc"
 chmod 755 "$BIN_DIR/terminal-app-search" "$BIN_DIR/addnick" "$BIN_DIR/sdt-launch" "$BIN_DIR/sdt-popup"
 
-printf 'Installed Search Dat Term commands to: %s\\n' "$BIN_DIR"
-printf 'Installed shared library to: %s\\n' "$DATA_DIR/search-dat-term.sh"
-printf 'Installed popup shell config to: %s\\n' "$DATA_DIR/sdt-popup.bashrc"
+printf 'Installed Search Dat Term commands to: %s\n' "$BIN_DIR"
+printf 'Installed shared library to: %s\n' "$DATA_DIR/search-dat-term.sh"
+printf 'Installed popup shell config to: %s\n' "$DATA_DIR/sdt-popup.bashrc"
 
 case ":$PATH:" in
     *":$BIN_DIR:"*) ;;
     *)
-        printf 'Note: add %s to your PATH to run the commands by name.\\n' "$BIN_DIR"
+        printf 'Note: add %s to your PATH to run the commands by name.\n' "$BIN_DIR"
         ;;
 esac
