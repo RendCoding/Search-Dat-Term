@@ -11,6 +11,7 @@ Search Dat Term lets you find installed desktop applications from a terminal usi
 - [Install](#install)
 - [Commands](#commands)
 - [Nicknames](#nicknames)
+- [Planned improvements](#planned-improvements)
 - [Compact Kitty popup](#compact-kitty-popup)
   - [Hyprland setup](#hyprland)
   - [KDE Plasma 6 setup](#kde-plasma-6-kwin)
@@ -92,6 +93,16 @@ addnick
 ```
 
 Open a new Bash session after creating the nickname. You can then run the nickname directly, for example `fox`. Generated functions use `sdt-launch`, which must be available on your PATH.
+
+## Planned improvements
+
+The following improvements are planned for future versions of Search Dat Term. They are roadmap items, not features available in the current release.
+
+- **Independent application launching:** improve the launch process so an application started from SDT keeps running independently when the SDT terminal or popup is closed. The goal is for users to be able to launch an app, close SDT, and continue using the app normally.
+- **Nickname deletion and management:** add a straightforward way to view saved nicknames and remove ones you no longer use, alongside the existing `addnick` creation workflow.
+- **Commonly used application icons:** explore showing recognizable icons for commonly used applications in the picker, making frequently selected apps easier to spot. This is a planned visual improvement; the current picker is text-based.
+
+These changes will be developed separately from the existing launch, nickname, and application-discovery behavior. No manual changes to your current nickname file or desktop configuration are required for these planned features.
 
 ## Compact Kitty popup
 
