@@ -10,7 +10,7 @@ sdt_application_dirs() {
 
     while IFS= read -r base; do
         [[ -n "$base" ]] && printf '%s\n' "$base/applications"
-    done < <(printf '%s' "$data_dirs" | tr ':' '\n')
+    done < <(printf '%s\n' "$data_dirs" | tr ':' '\n')
 
     # Flatpak exports are not always included in XDG_DATA_DIRS.
     printf '%s\n' \
