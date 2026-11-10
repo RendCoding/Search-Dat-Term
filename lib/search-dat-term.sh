@@ -4,6 +4,7 @@
 sdt_application_dirs() {
     local data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
     local data_dirs="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+    local extra_dirs="${SDT_EXTRA_APPLICATION_DIRS:-}"
     local base
 
     printf '%s\n' "$data_home/applications"
@@ -17,6 +18,11 @@ sdt_application_dirs() {
         "$HOME/.local/share/flatpak/exports/share/applications" \
         "/var/lib/flatpak/exports/share/applications" \
         "/var/lib/snapd/desktop/applications"
+
+    # Optional colon-separated directories containing .desktop files.
+    while IFS= read -r base; do
+        [[ -n "$base" ]] && printf '%s\n' "$base"
+    done < <(printf '%s\n' "$extra_dirs" | tr ':' '\n')
 }
 
 sdt_find_desktop_files() {
