@@ -12,7 +12,7 @@ unset _nick_file
 clear
 if command -v fastfetch >/dev/null 2>&1; then
     # Fastfetch detects the current distro and chooses its compact logo.
-    fastfetch --logo-type small --structure os:kernel:uptime:shell
+    fastfetch --config none --logo-type small --structure os:kernel:uptime:shell
 else
     printf '%s\n' 'Tip: install fastfetch to show your distro logo and system summary.'
 fi
