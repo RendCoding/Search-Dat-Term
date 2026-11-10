@@ -25,13 +25,27 @@ The original setup uses:
 
 The current terminal workflow uses Kitty. The author's desktop environment is Hyprland. These are part of the current setup, not requirements of the application-search scripts themselves.
 
-## Original commands
+## Files and commands
 
-| Command | Purpose |
+The original standalone scripts are in `bin/`:
+
+| File / command | Purpose |
 | --- | --- |
-| `terminal-app-search` | Opens an fzf list of discovered desktop applications and launches the selected app. |
-| `addnick` | Prompts for an application nickname and adds a Bash function that launches its desktop entry. |
-| `search` | The application-search function in the author's custom Bash configuration. |
+| `bin/terminal-app-search` | Opens an fzf list of discovered desktop applications and launches the selected app. |
+| `bin/addnick` | Prompts for an application nickname and adds a Bash function that launches its desktop entry. |
+
+To put the scripts on your personal command path:
+
+```bash
+mkdir -p "$HOME/.local/bin"
+cp bin/terminal-app-search bin/addnick "$HOME/.local/bin/"
+```
+
+Make sure `$HOME/.local/bin` is in your `PATH`. The scripts are stored in Git with executable permissions.
+
+The author's custom Bash configuration also contains a `search` function. That personal shell configuration has not yet been added to the repository.
+
+## Application discovery
 
 The standalone scripts look for desktop entries in these locations:
 
@@ -50,7 +64,7 @@ That directory name is historical: the project began while the author was using 
 
 ## Configuration and installation
 
-The original scripts and personal shell/terminal configuration are being added to this repository in a separate step. There is not yet a generic installer or a cross-distribution setup procedure. Until those files and instructions are published, do not assume that cloning this repository alone installs the commands.
+The two standalone scripts are published, but the author's personal Bash/Kitty/Hyprland integration is still being documented. There is not yet a generic installer or a cross-distribution setup procedure. The scripts currently retain the original paths and assumptions of the working setup.
 
 ## Portability roadmap
 
