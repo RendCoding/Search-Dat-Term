@@ -4,16 +4,34 @@ A terminal-based application launcher and app-nickname tool for Linux.
 
 Search Dat Term lets you find installed desktop applications from a terminal using [fzf](https://github.com/junegunn/fzf), launch them, and create short shell commands (nicknames) for applications you use often.
 
+## Navigation
+
+- [Features](#features)
+- [Requirements](#requirements)
+- [Install](#install)
+- [Commands](#commands)
+- [Nicknames](#nicknames)
+- [Compact Kitty popup](#compact-kitty-popup)
+  - [Hyprland setup](#hyprland)
+  - [KDE Plasma 6 setup](#kde-plasma-6-kwin)
+  - [Other desktop environments and window managers](#other-desktop-environments-and-window-managers)
+  - [Changing popup size](#changing-the-popup-size)
+  - [Planned automatic desktop integration](#future-desktop-integration)
+- [Application discovery](#application-discovery)
+  - [Troubleshooting missing applications](#if-an-application-does-not-appear)
+- [Desktop environment notes](#desktop-environment)
+- [Testing status](#testing-status)
+- [Contributing](#contributing)
+
 ## Features
 
-- **Terminal app search** — interactively search desktop applications with fzf.
+- **Terminal app search** — interactively search installed desktop applications with fzf.
 - **Launch applications** — launch the selected desktop entry using an available desktop launcher.
-- **Create app nicknames** — use `addnick` to create a short Bash function for an installed application.
+- **Create app nicknames** — use `addnick` to create a short shell command for an installed application.
 - **Automatic nickname loading** — `addnick` adds the nickname file to your Bash startup file automatically.
-- **Compact Kitty popup** — optional Hyprland `Super + R` launcher with a centered mini terminal, compact Fastfetch output, and distro-specific small logo.
-- **XDG application discovery** — checks user and system application directories.
-- **Flatpak and Snap discovery** — checks common export directories.
-- **Custom discovery paths** — add directories containing desktop-entry files with `SDT_EXTRA_APPLICATION_DIRS`.
+- **Compact Kitty popup** — optional small terminal with a distro-aware compact Fastfetch summary and logo.
+- **Desktop integration** — supplied Hyprland rules and an installed desktop launcher for KDE Plasma shortcuts.
+- **XDG application discovery** — checks user and system application directories, including common Flatpak and Snap exports.
 
 ## Requirements
 
@@ -21,16 +39,12 @@ Search Dat Term lets you find installed desktop applications from a terminal usi
 - Bash 4 or newer.
 - [fzf](https://github.com/junegunn/fzf).
 - Standard command-line utilities: `find`, `awk`, `grep`, `sort`, `sed`, and `tr`.
-- At least one desktop-entry launcher:
-  - `gtk-launch`
-  - `gio` with its `launch` subcommand
-  - `dex` (optional alternative)
+- At least one desktop-entry launcher: `gtk-launch`, `gio launch`, or optionally `dex`.
+- For the optional popup: Kitty. Fastfetch is optional.
 
-Package names vary by distribution. Install `fzf` and at least one supported launcher using your distribution's package manager.
+Package names vary by distribution. Install `fzf`, a supported desktop launcher, and (if using the popup) Kitty with your distribution's package manager.
 
 ## Install
-
-Clone the repository and run:
 
 ```bash
 git clone https://github.com/RendCoding/Search-Dat-Term.git
@@ -38,9 +52,11 @@ cd Search-Dat-Term
 bash install.sh
 ```
 
-The installer places commands in `~/.local/bin` and the shared helper library under `$XDG_DATA_HOME/search-dat-term` (or `~/.local/share/search-dat-term` when `XDG_DATA_HOME` is unset).
+The installer places commands in `~/.local/bin` and the shared helper library and popup shell config under `$XDG_DATA_HOME/search-dat-term` (or `~/.local/share/search-dat-term`). For desktop shortcuts, use the full path to `sdt-popup` (normally `~/.local/bin/sdt-popup`) or create a desktop launcher that points to that installed command. This avoids relying on the desktop session's PATH.
 
-Make sure `~/.local/bin` is in your `PATH`. You can override the command installation directory by setting `SDT_BIN_DIR` before running the installer.
+Make sure `~/.local/bin` is in your shell's PATH. You can override the command installation directory by setting `SDT_BIN_DIR` before running the installer.
+
+### Commands
 
 | Command | Purpose |
 | --- | --- |
@@ -74,34 +90,88 @@ export SDT_BASH_STARTUP_FILE="$HOME/.config/my-shell/bashrc"
 addnick
 ```
 
-Open a new Bash session after creating the nickname. You can then run the nickname directly, for example `fox`. Generated functions use `sdt-launch`, which must be available on your `PATH`.
+Open a new Bash session after creating the nickname. You can then run the nickname directly, for example `fox`. Generated functions use `sdt-launch`, which must be available on your PATH.
 
-## Compact Hyprland popup
+## Compact Kitty popup
 
-SDT includes an optional small Kitty terminal for the quick-launch workflow:
+The optional popup opens a dedicated Kitty window with a compact Fastfetch summary, the small logo Fastfetch detects for the current distribution, and a `search` shell function that starts the SDT application picker.
 
-1. Press `Super + R` to open a compact, centered Kitty window.
-2. The popup displays a short Fastfetch summary with the **small logo automatically detected for the current Linux distribution**.
-3. Type `search` and press Enter to open the SDT application picker.
+- Default popup size: **760 × 420 pixels**.
+- Kitty window class: **`sdt-popup`** (use this to target only the popup in window rules).
+- Fastfetch uses `--logo-type small`; it does not hard-code the Arch logo.
+- Fastfetch is optional. The popup still opens without it.
 
-The popup uses Kitty and Fastfetch; the normal `terminal-app-search` command does not depend on either one. Fastfetch is optional, and the popup still opens if it is not installed.
+Launch it directly with:
 
-After installing SDT, add the supplied Hyprland snippet to your config:
-
-```ini
-source = ~/.config/hypr/sdt-popup.conf
+```bash
+sdt-popup
 ```
 
-Copy the snippet into that location first:
+### Hyprland
+
+A ready-made Hyprland snippet is included at `config/hyprland/sdt-popup.conf`. Copy and source it:
 
 ```bash
 mkdir -p ~/.config/hypr
 cp config/hyprland/sdt-popup.conf ~/.config/hypr/sdt-popup.conf
 ```
 
-Or copy the three lines from `config/hyprland/sdt-popup.conf` into your existing Hyprland config. The snippet defines the `Super + R` binding and makes only the `sdt-popup` Kitty window float, center, and open at 760×420 pixels. It does not edit or replace your existing Hyprland configuration. Reload Hyprland after adding it.
+Add this line to your main Hyprland config:
 
-Install `kitty` and `fastfetch` with your distribution's package manager. The popup's Fastfetch call uses `--logo-type small`, so Fastfetch chooses the compact logo for the detected distro rather than always showing the Arch logo.
+```ini
+source = ~/.config/hypr/sdt-popup.conf
+```
+
+The snippet binds `SUPER + R`, floats and centers only the `sdt-popup` window, and sets it to 760 × 420. Reload Hyprland after adding it. If that key is already in use, change the `bind` line to another key.
+
+### KDE Plasma 6 (KWin)
+
+Because KDE shortcut commands may not inherit the interactive shell's PATH, use the full path to the installed popup command in the shortcut, or create a desktop launcher for it.
+
+1. Open **System Settings → Keyboard → Shortcuts**.
+2. Add a **Command or Script** shortcut.
+3. Set its command to:
+
+   ```bash
+   $HOME/.local/bin/sdt-popup
+   ```
+
+4. Assign the desired key combination (for example, **Meta + R**) and apply it.
+
+To make the popup small and centered:
+
+1. Open **System Settings → Window Management → Window Rules** and add a rule.
+2. Use **Detect Window Properties** and select the popup. Confirm its window class is `sdt-popup`.
+3. In the rule editor, use **Add Property** to add **Size** and **Initial placement**.
+4. Set Size to **Apply Initially**, width **760**, height **420**. Set Initial placement to **Centered**.
+5. Save the rule and apply the changes.
+
+The rule should match the `sdt-popup` class so it does not resize ordinary Kitty windows. KDE labels and layout can vary slightly between Plasma releases.
+
+### Other desktop environments and window managers
+
+The popup command itself is desktop-environment independent. The keybinding and window placement rules are not: GNOME, Xfce, Cinnamon, i3, Sway, Niri, and other compositors/window managers each expose different shortcut and per-window-rule settings.
+
+For another environment:
+
+- Bind its custom keyboard shortcut to the installed `sdt-popup` command. If the desktop cannot find it by name, use the full path (normally `$HOME/.local/bin/sdt-popup`) or launch the installed desktop entry using that environment's application launcher.
+- Match the Kitty window by class **`sdt-popup`**.
+- If supported, configure it as floating, centered, and initially **760 × 420**.
+- Change the key combination in that environment's shortcut settings; the Hyprland snippet only applies to Hyprland.
+
+Not every desktop environment supports per-window size and placement rules. In those cases, the popup will still launch, but its size and position may need to be adjusted through that environment's own tools or Kitty settings.
+
+### Changing the popup size
+
+- **Hyprland:** edit the `size 760 420` rule in `config/hyprland/sdt-popup.conf`.
+- **KDE Plasma:** edit the Size property in the KWin rule for `sdt-popup`.
+- **Other environments:** edit the matching per-window rule, if that environment supports one.
+
+The default values are a starting point; adjust them to suit your display.
+
+### Future desktop integration
+
+Automatic detection and configuration of the active desktop environment/window manager — including choosing a suitable default popup size and keybinding — is a planned future improvement. For now, SDT deliberately provides manual, environment-specific setup instructions rather than guessing at or overwriting a user's desktop shortcuts and window rules.
 
 ## Application discovery
 
@@ -167,13 +237,13 @@ If the application has no `.desktop` file, SDT has no desktop entry to discover.
 
 ## Desktop environment
 
-The core tools are terminal-based and do not require Hyprland, Niri, Kitty, or a particular terminal emulator. They must be run inside a graphical desktop session so launched applications can open. The optional `sdt-popup` feature specifically uses Kitty and its supplied keybind/window rules target Hyprland.
+The core tools are terminal-based and do not require Hyprland, Niri, Kitty, or a particular terminal emulator. They must be run inside a graphical desktop session so launched applications can open. The optional popup uses Kitty; window sizing and keyboard shortcuts are configured separately for each desktop environment/window manager, as described above.
 
 The historical `~/.config/niri/command/` paths are retained when existing files are detected. They are legacy file locations, not a requirement to use Niri. The original Arch workflow remains supported through the GTK launcher and legacy nickname/config paths.
 
 ## Testing status
 
-Application discovery and launching have been tested on Void Linux. Nickname creation and manual nickname loading have also been tested there; the automatic startup integration and compact Kitty popup are newly added and should be verified after updating. This does not mean every distribution, package format, or desktop environment has been tested.
+Application discovery and launching have been tested on Void Linux. Nickname creation and manual nickname loading have also been tested there. The compact Kitty popup, distro-specific Fastfetch display, and automatic nickname startup have been added; popup behavior and desktop integration should be verified on each supported desktop environment. KDE Plasma 6.7.5 setup has been user-tested for the popup launcher, keybinding, size, and centered placement. This does not mean every distribution, package format, or desktop environment has been tested.
 
 Please include your distribution, desktop environment, available launcher command, and any error output when reporting a problem.
 
