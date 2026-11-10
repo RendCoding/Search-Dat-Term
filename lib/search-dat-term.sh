@@ -60,8 +60,6 @@ sdt_launch_desktop_id() {
         return 1
     fi
 
-    # Prefer the original launcher where available; gio can launch a desktop
-    # file by path and also handles entries outside gtk-launch's search path.
     if command -v gtk-launch >/dev/null 2>&1 && gtk-launch "$id"; then
         return 0
     fi
@@ -87,9 +85,37 @@ sdt_nicknames_file() {
     if [[ -n "${SDT_NICKNAMES_FILE:-}" ]]; then
         printf '%s\n' "$SDT_NICKNAMES_FILE"
     elif [[ -f "$legacy" ]]; then
-        # Preserve the author's existing setup without requiring Niri.
         printf '%s\n' "$legacy"
     else
         printf '%s\n' "$config_home/search-dat-term/nicknames.sh"
     fi
+}
+
+# Add the nickname file to the user's Bash startup file once.
+sdt_enable_nicknames() {
+    local nick_file="$1"
+    local startup_file="${SDT_BASH_STARTUP_FILE:-}"
+    local legacy_bashrc="$HOME/.config/niri/command/bashrc"
+    local source_line
+
+    if [[ -z "$startup_file" ]]; then
+        if [[ -f "$legacy_bashrc" ]]; then
+            startup_file="$legacy_bashrc"
+        else
+            startup_file="$HOME/.bashrc"
+        fi
+    fi
+
+    mkdir -p "$(dirname -- "$startup_file")"
+    touch "$startup_file"
+    printf -v source_line 'source %q' "$nick_file"
+
+    if ! grep -Fqx -- "$source_line" "$startup_file"; then
+        {
+            printf '\n# Load Search Dat Term app nicknames\n'
+            printf '%s\n' "$source_line"
+        } >> "$startup_file"
+    fi
+
+    printf '%s\n' "$startup_file"
 }
