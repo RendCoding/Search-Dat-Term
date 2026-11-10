@@ -4,76 +4,150 @@ A terminal-based application launcher and app-nickname tool for Linux.
 
 Search Dat Term lets you find installed desktop applications from a terminal using [fzf](https://github.com/junegunn/fzf), launch them, and create short shell commands (nicknames) for applications you use often.
 
-> **Project status:** This repository is documenting the original working setup first. The current implementation was built on Arch Linux and is now used with Hyprland and Kitty. Cross-distribution compatibility work has **not started yet**. The goal is to preserve the existing behaviour before making the project portable.
-
 ## Features
 
 - **Terminal app search** — interactively search desktop applications with fzf.
-- **Launch applications** — launch the selected desktop entry using `gtk-launch`.
+- **Launch applications** — launch the selected desktop entry using an available desktop launcher.
 - **Create app nicknames** — use `addnick` to create a short Bash function for an installed application.
-- **Flatpak discovery** — the standalone app-search and nickname scripts also check the common per-user and system Flatpak export directories.
+- **Automatic nickname loading** — `addnick` adds the nickname file to your Bash startup file automatically.
+- **XDG application discovery** — checks user and system application directories.
+- **Flatpak and Snap discovery** — checks common export directories.
+- **Custom discovery paths** — add directories containing desktop-entry files with `SDT_EXTRA_APPLICATION_DIRS`.
 
-## Current requirements
+## Requirements
 
-The original setup uses:
+- Linux with a graphical desktop session.
+- Bash 4 or newer.
+- [fzf](https://github.com/junegunn/fzf).
+- Standard command-line utilities: `find`, `awk`, `grep`, `sort`, `sed`, and `tr`.
+- At least one desktop-entry launcher:
+  - `gtk-launch`
+  - `gio` with its `launch` subcommand
+  - `dex` (optional alternative)
 
-- Linux
-- Bash
-- [fzf](https://github.com/junegunn/fzf)
-- `gtk-launch` (provided by GTK)
-- `setsid` (used by generated nickname functions; commonly provided by util-linux)
+Package names vary by distribution. Install `fzf` and at least one supported launcher using your distribution's package manager.
 
-The current terminal workflow uses Kitty. The author's desktop environment is Hyprland. These are part of the current setup, not requirements of the application-search scripts themselves.
+## Install
 
-## Files and commands
-
-The original standalone scripts are in `bin/`:
-
-| File / command | Purpose |
-| --- | --- |
-| `bin/terminal-app-search` | Opens an fzf list of discovered desktop applications and launches the selected app. |
-| `bin/addnick` | Prompts for an application nickname and adds a Bash function that launches its desktop entry. |
-
-To put the scripts on your personal command path:
+Clone the repository and run:
 
 ```bash
-mkdir -p "$HOME/.local/bin"
-cp bin/terminal-app-search bin/addnick "$HOME/.local/bin/"
+git clone https://github.com/RendCoding/Search-Dat-Term.git
+cd Search-Dat-Term
+bash install.sh
 ```
 
-Make sure `$HOME/.local/bin` is in your `PATH`. The scripts are stored in Git with executable permissions.
+The installer places commands in `~/.local/bin` and the shared helper library under `$XDG_DATA_HOME/search-dat-term` (or `~/.local/share/search-dat-term` when `XDG_DATA_HOME` is unset).
 
-The author's custom Bash configuration also contains a `search` function. That personal shell configuration has not yet been added to the repository.
+Make sure `~/.local/bin` is in your `PATH`. You can override the command installation directory by setting `SDT_BIN_DIR` before running the installer.
+
+| Command | Purpose |
+| --- | --- |
+| `terminal-app-search` | Opens an fzf list of discovered desktop applications and launches the selected app. |
+| `addnick` | Prompts for an application nickname, saves it, and enables automatic Bash loading. |
+| `sdt-launch` | Launches a desktop entry by its desktop-file ID. |
+
+## Nicknames
+
+Run:
+
+```bash
+addnick
+```
+
+Choose an application and enter a nickname containing letters, numbers, underscores, or hyphens (starting with a letter). SDT saves the function to:
+
+```text
+${XDG_CONFIG_HOME:-~/.config}/search-dat-term/nicknames.sh
+```
+
+If the historical `~/.config/niri/command/nicknames.sh` file already exists, SDT reuses it to avoid breaking an existing setup. Override the nickname file with `SDT_NICKNAMES_FILE`.
+
+**Automatic startup setup:** after saving a nickname, `addnick` adds a source line to your Bash startup file. By default it uses the historical `~/.config/niri/command/bashrc` if that file exists; otherwise it uses `~/.bashrc`. The line is added only once. If your terminal starts Bash with a different custom rcfile, set `SDT_BASH_STARTUP_FILE` to that file before running `addnick`.
+
+For example:
+
+```bash
+export SDT_BASH_STARTUP_FILE="$HOME/.config/my-shell/bashrc"
+addnick
+```
+
+Open a new Bash session after creating the nickname. You can then run the nickname directly, for example `fox`. Generated functions use `sdt-launch`, which must be available on your `PATH`.
 
 ## Application discovery
 
-The standalone scripts look for desktop entries in these locations:
+Search Dat Term checks:
 
-- `~/.local/share/applications`
-- `/usr/share/applications`
-- `/var/lib/flatpak/exports/share/applications`
+- `$XDG_DATA_HOME/applications` (defaults to `~/.local/share/applications`)
+- Each `applications` directory under `$XDG_DATA_DIRS` (defaults to `/usr/local/share:/usr/share`)
 - `~/.local/share/flatpak/exports/share/applications`
+- `/var/lib/flatpak/exports/share/applications`
+- `/var/lib/snapd/desktop/applications`
+- Any additional directories listed in `SDT_EXTRA_APPLICATION_DIRS`
 
-The original `addnick` workflow writes generated functions to:
+Desktop entries marked `NoDisplay=true` or `Hidden=true`, and entries whose type is not `Application`, are skipped.
 
-```text
-~/.config/niri/command/nicknames.sh
-```
+### If an application does not appear
 
-That directory name is historical: the project began while the author was using Niri and was later carried over to a Hyprland setup. The existing path is being documented as-is; it is not a requirement to use Niri.
+Not every application installs its desktop-entry file in the same place. Some applications are installed as portable AppImages, unpacked manually, installed by a third-party package manager, or configured to store launcher files in a custom directory. **If an application's `.desktop` file is outside the directories above, SDT will not find it automatically.** SDT searches for desktop-entry files; it does not scan every executable on the computer.
 
-## Configuration and installation
+1. **Find the application's desktop file.** Search likely locations:
 
-The two standalone scripts are published, but the author's personal Bash/Kitty/Hyprland integration is still being documented. There is not yet a generic installer or a cross-distribution setup procedure. The scripts currently retain the original paths and assumptions of the working setup.
+   ```bash
+   find "$HOME" /opt /usr/local/share -type f -name '*.desktop' 2>/dev/null
+   ```
 
-## Portability roadmap
+   Narrow the search by application name if needed:
 
-The work is intentionally staged:
+   ```bash
+   find "$HOME" /opt /usr/local/share -type f -iname '*firefox*.desktop' 2>/dev/null
+   ```
 
-1. Record and publish the original working files without changing their behaviour.
-2. Verify that the repository accurately represents the author's existing setup.
-3. Only then, make the minimum changes needed for other Linux distributions, keeping the original Arch/Hyprland workflow working.
+2. **Check SDT's search paths.** Run:
+
+   ```bash
+   source "${XDG_DATA_HOME:-$HOME/.local/share}/search-dat-term/search-dat-term.sh"
+   sdt_application_dirs
+   ```
+
+   To count the desktop files discovered:
+
+   ```bash
+   sdt_find_desktop_files | tr -cd '\\0' | wc -c
+   ```
+
+3. **Add the directory containing the desktop file.** Use a colon-separated list:
+
+   ```bash
+   export SDT_EXTRA_APPLICATION_DIRS="$HOME/Applications/share/applications:/opt/my-apps/share/applications"
+   ```
+
+   These must be the directories containing the `.desktop` files, not merely the directories containing application binaries. The setting is read when SDT runs.
+
+4. **Make the setting persistent.** Add the export line to your Bash startup file (commonly `~/.bashrc`), open a new terminal, and check `sdt_application_dirs` again.
+
+5. **Check the desktop entry.** It should be a valid `.desktop` file with `Type=Application` and a working `Exec=` command. SDT intentionally skips entries with `Hidden=true` or `NoDisplay=true`. Inspect the relevant fields:
+
+   ```bash
+   grep -E '^(Type|Name|Exec|Hidden|NoDisplay)=' /path/to/app.desktop
+   ```
+
+6. **Try the search again.** Run `terminal-app-search`. If the app appears but will not launch, check that `gtk-launch`, `gio`, or `dex` is installed and that the `Exec=` command is valid.
+
+If the application has no `.desktop` file, SDT has no desktop entry to discover. Create a valid launcher file in a searched directory or in a directory listed in `SDT_EXTRA_APPLICATION_DIRS`.
+
+## Desktop environment
+
+The tools are terminal-based and do not require Hyprland, Niri, Kitty, or a particular terminal emulator. They must be run inside a graphical desktop session so launched applications can open.
+
+The historical `~/.config/niri/command/` paths are retained when existing files are detected. They are legacy file locations, not a requirement to use Niri. The original Arch workflow remains supported through the GTK launcher and legacy nickname/config paths.
+
+## Testing status
+
+Application discovery and launching have been tested on Void Linux. Nickname creation and manual nickname loading have also been tested there; the automatic startup integration is newly added and should be verified after updating. This does not mean every distribution, package format, or desktop environment has been tested.
+
+Please include your distribution, desktop environment, available launcher command, and any error output when reporting a problem.
 
 ## Contributing
 
-Bug reports and suggestions are welcome. Please distinguish issues with the original setup from requests for additional distribution support; portability is a later stage of the project.
+Bug reports and suggestions are welcome. Include your distribution, desktop environment, and relevant error messages.
