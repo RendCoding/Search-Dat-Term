@@ -15,6 +15,7 @@ Search Dat Term lets you find installed desktop applications from a terminal usi
   - [Hyprland setup](#hyprland)
   - [KDE Plasma 6 setup](#kde-plasma-6-kwin)
   - [Other desktop environments and window managers](#other-desktop-environments-and-window-managers)
+  - [Changing the keybinding](#changing-the-keybinding)
   - [Changing popup size](#changing-the-popup-size)
   - [Planned automatic desktop integration](#future-desktop-integration)
 - [Application discovery](#application-discovery)
@@ -150,28 +151,114 @@ The rule should match the `sdt-popup` class so it does not resize ordinary Kitty
 
 ### Other desktop environments and window managers
 
-The popup command itself is desktop-environment independent. The keybinding and window placement rules are not: GNOME, Xfce, Cinnamon, i3, Sway, Niri, and other compositors/window managers each expose different shortcut and per-window-rule settings.
+The popup command is the same across desktop environments and window managers:
 
-For another environment:
+```bash
+$HOME/.local/bin/sdt-popup
+```
 
-- Bind its custom keyboard shortcut to the installed `sdt-popup` command. If the desktop cannot find it by name, use the full path (normally `$HOME/.local/bin/sdt-popup`) or launch the installed desktop entry using that environment's application launcher.
-- Match the Kitty window by class **`sdt-popup`**.
-- If supported, configure it as floating, centered, and initially **760 × 420**.
-- Change the key combination in that environment's shortcut settings; the Hyprland snippet only applies to Hyprland.
+Use the full path in desktop shortcut settings because graphical sessions do not always inherit the PATH from your interactive shell. If you installed SDT somewhere other than the default location, replace this path with the actual location of `sdt-popup`.
 
-Not every desktop environment supports per-window size and placement rules. In those cases, the popup will still launch, but its size and position may need to be adjusted through that environment's own tools or Kitty settings.
+There are two parts to desktop integration:
+
+1. **Keyboard shortcut:** configure a shortcut to run `sdt-popup`.
+2. **Window behavior:** if your environment supports per-window rules, match the Kitty window class `sdt-popup` and make it floating, centered, and 760 × 420 pixels.
+
+The shortcut is enough to launch the popup. Window rules are optional; without them, Kitty still opens, but the desktop may use its normal size and placement.
+
+#### GNOME
+
+1. Open **Settings → Keyboard → View and Customize Shortcuts**.
+2. Open **Custom Shortcuts** (or the custom-shortcut section for your GNOME version).
+3. Add a shortcut named **Search Dat Term Popup**.
+4. Set the command to `/home/your-user/.local/bin/sdt-popup` (use your actual home directory).
+5. Choose a key combination and save it.
+
+GNOME does not provide a standard built-in per-window rule editor in its Settings app. The shortcut will launch the popup, but custom positioning or sizing may require a GNOME Shell extension or another window-management tool.
+
+#### KDE Plasma 6 (KWin)
+
+1. Open **System Settings → Keyboard → Shortcuts**.
+2. Add a **Command or Script** shortcut named **Search Dat Term Popup**.
+3. Set its command to `$HOME/.local/bin/sdt-popup`.
+4. Assign a key combination (for example, **Meta + R**) and apply it.
+
+To make the popup small and centered:
+
+1. Open **System Settings → Window Management → Window Rules** and add a rule.
+2. Use **Detect Window Properties** and select the popup. Confirm its window class is `sdt-popup`.
+3. In the rule editor, use **Add Property** to add **Size** and **Initial placement**.
+4. Set Size to **Apply Initially**, width **760**, height **420**. Set Initial placement to **Centered**.
+5. Save the rule and apply the changes.
+
+The rule should match the `sdt-popup` class so it does not resize ordinary Kitty windows. KDE labels and layout can vary slightly between Plasma releases.
+
+#### Xfce
+
+1. Open **Settings → Keyboard → Application Shortcuts**.
+2. Add a shortcut and enter `/home/your-user/.local/bin/sdt-popup` as the command.
+3. Press the key combination you want to assign.
+
+Xfce's shortcut launches the popup. Window placement and sizing depend on the Xfwm4 version and its available window rules; if you cannot create a rule matching `sdt-popup`, the popup will still work without forced centering or sizing.
+
+#### Cinnamon
+
+1. Open **System Settings → Keyboard → Shortcuts**.
+2. Find the custom-shortcut section and add a new shortcut.
+3. Use `/home/your-user/.local/bin/sdt-popup` as the command.
+4. Assign the key combination and save.
+
+Cinnamon's shortcut starts the popup. If your Cinnamon version or window manager does not expose per-window rules, it will use the normal Kitty placement and size.
+
+#### i3
+
+Add a keybinding and window rule to your i3 config (usually `~/.config/i3/config`):
+
+```i3
+bindsym $mod+r exec --no-startup-id $HOME/.local/bin/sdt-popup
+for_window [class="sdt-popup"] floating enable
+for_window [class="sdt-popup"] resize set 760 420
+for_window [class="sdt-popup"] move position center
+```
+
+Reload i3 after editing the config. If your Kitty build reports a different window class, inspect the window with `xprop` and update the rule to match it.
+
+#### Sway
+
+Add a shortcut to your Sway config (usually `~/.config/sway/config`):
+
+```text
+bindsym $mod+r exec $HOME/.local/bin/sdt-popup
+```
+
+Reload Sway after editing. Sway's window matching uses Wayland app IDs or Xwayland window properties, which can differ depending on how Kitty is running. Check the popup's properties with `swaymsg -t get_tree` before adding a placement rule; match the actual reported app ID or class rather than assuming it is identical on every setup.
+
+#### Other environments
+
+For Niri, Openbox, and other desktops or window managers, use the same approach: bind a shortcut to the full path of `sdt-popup`, then (if supported) add a per-window rule matching `sdt-popup`. The exact configuration syntax and available placement features vary by environment.
+
+### Changing the keybinding
+
+The default **Super + R** binding is supplied by the Hyprland example only. It is not a global SDT shortcut. On KDE, GNOME, Xfce, Cinnamon, and other desktop environments, choose the key in that environment's shortcut settings. In i3 or Sway, edit the `bindsym` line in the relevant config file.
+
+If the key is already in use, choose another combination. For example, change `$mod+r` to `$mod+space` in an i3/Sway example, or select a different combination in the desktop's shortcut editor. Avoid assigning the same combination to two actions.
 
 ### Changing the popup size
 
 - **Hyprland:** edit the `size 760 420` rule in `config/hyprland/sdt-popup.conf`.
 - **KDE Plasma:** edit the Size property in the KWin rule for `sdt-popup`.
+- **i3:** edit the `resize set 760 420` rule.
 - **Other environments:** edit the matching per-window rule, if that environment supports one.
 
 The default values are a starting point; adjust them to suit your display.
 
 ### Future desktop integration
 
-Automatic detection and configuration of the active desktop environment/window manager — including choosing a suitable default popup size and keybinding — is a planned future improvement. For now, SDT deliberately provides manual, environment-specific setup instructions rather than guessing at or overwriting a user's desktop shortcuts and window rules.
+Automatic detection and configuration of the active desktop environment/window manager is planned. The goal is for SDT to recognize common environments, provide or apply suitable popup behavior where it is supported, and choose sensible default sizing without replacing unrelated user settings.
+
+Making the keybinding easier to change is also planned. The goal is to move away from requiring users to find and edit a different config snippet or settings screen for each environment, and toward a simpler, consistent way to choose the popup shortcut. The exact implementation is not in place yet; for now, configure the shortcut manually using the instructions above.
+
+These are planned improvements, not current features. For now, SDT deliberately provides manual, environment-specific setup instructions rather than guessing at or overwriting a user's desktop shortcuts and window rules.
 
 ## Application discovery
 
