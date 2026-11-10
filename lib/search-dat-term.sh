@@ -15,7 +15,7 @@ sdt_application_dirs() {
     # Flatpak exports are not always included in XDG_DATA_DIRS.
     printf '%s\n' \
         "$HOME/.local/share/flatpak/exports/share/applications" \
-        "/var/lib/flatpak/exports/share/applications" \\
+        "/var/lib/flatpak/exports/share/applications" \
         "/var/lib/snapd/desktop/applications"
 }
 
