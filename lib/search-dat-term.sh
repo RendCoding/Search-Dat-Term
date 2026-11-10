@@ -15,7 +15,8 @@ sdt_application_dirs() {
     # Flatpak exports are not always included in XDG_DATA_DIRS.
     printf '%s\n' \
         "$HOME/.local/share/flatpak/exports/share/applications" \
-        "/var/lib/flatpak/exports/share/applications"
+        "/var/lib/flatpak/exports/share/applications" \\
+        "/var/lib/snapd/desktop/applications"
 }
 
 sdt_find_desktop_files() {
@@ -27,7 +28,7 @@ sdt_find_desktop_files() {
     done < <(sdt_application_dirs)
 
     (("${#dirs[@]}" > 0)) || return 0
-    find "${dirs[@]}" -type f -name '*.desktop' -print0 2>/dev/null
+    find -L "${dirs[@]}" -type f -name '*.desktop' -print0 2>/dev/null
 }
 
 sdt_find_desktop_id() {
