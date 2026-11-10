@@ -70,7 +70,7 @@ ${XDG_CONFIG_HOME:-~/.config}/search-dat-term/nicknames.sh
 
 If the historical `~/.config/niri/command/nicknames.sh` file already exists, it is reused to avoid breaking an existing setup. You can override the location with `SDT_NICKNAMES_FILE`.
 
-After creating a nickname, add the `source` line printed by `addnick` to your Bash startup file (commonly `~/.bashrc`), then open a new Bash session. The generated functions use `sdt-launch`, which must be available on your `PATH`.
+After creating a nickname, `addnick` now automatically adds a `source` line for the nickname file to your Bash startup file. By default it uses the historical `~/.config/niri/command/bashrc` if that file exists; otherwise it uses `~/.bashrc`. It adds the line only once. Set `SDT_BASH_STARTUP_FILE` before running `addnick` if your Bash session uses a different startup file. Open a new Bash session after creating a nickname. The generated functions use `sdt-launch`, which must be available on your `PATH`.
 
 ## Application discovery
 
