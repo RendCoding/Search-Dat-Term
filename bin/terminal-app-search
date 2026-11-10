@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 
-command -v fzf >/dev/null || exit 1
-command -v gtk-launch >/dev/null || {
-    echo "gtk-launch is not installed"
-    read -r
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SCRIPT_DIR/../lib/search-dat-term.sh" ]]; then
+    source "$SCRIPT_DIR/../lib/search-dat-term.sh"
+elif [[ -f "${XDG_DATA_HOME:-$HOME/.local/share}/search-dat-term/search-dat-term.sh" ]]; then
+    source "${XDG_DATA_HOME:-$HOME/.local/share}/search-dat-term/search-dat-term.sh"
+else
+    echo "Search Dat Term: shared library not found. Re-run the installation steps." >&2
+    exit 1
+fi
+
+command -v fzf >/dev/null 2>&1 || {
+    echo "Search Dat Term: fzf is not installed." >&2
     exit 1
 }
 
@@ -27,13 +35,12 @@ while IFS= read -r -d '' file; do
 
     apps["$name  [$id]"]=$id
     entries+=("$name  [$id]")
-done < <(
-    find "$HOME/.local/share/applications" \
-         /usr/share/applications \
-         /var/lib/flatpak/exports/share/applications \
-         "$HOME/.local/share/flatpak/exports/share/applications" \
-         -type f -name '*.desktop' -print0 2>/dev/null
-)
+done < <(sdt_find_desktop_files)
+
+(("${#entries[@]}" > 0)) || {
+    echo "Search Dat Term: no visible application desktop entries were found." >&2
+    exit 0
+}
 
 choice=$(printf '%s\n' "${entries[@]}" |
     sort -fu |
@@ -41,4 +48,4 @@ choice=$(printf '%s\n' "${entries[@]}" |
 
 [[ -z "$choice" ]] && exit 0
 
-gtk-launch "${apps[$choice]}" >/dev/null 2>&1 &
+sdt_launch_desktop_id "${apps[$choice]}" >/dev/null 2>&1 &
