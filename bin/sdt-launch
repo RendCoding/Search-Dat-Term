@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SCRIPT_DIR/../lib/search-dat-term.sh" ]]; then
+    source "$SCRIPT_DIR/../lib/search-dat-term.sh"
+elif [[ -f "${XDG_DATA_HOME:-$HOME/.local/share}/search-dat-term/search-dat-term.sh" ]]; then
+    source "${XDG_DATA_HOME:-$HOME/.local/share}/search-dat-term/search-dat-term.sh"
+else
+    echo "Search Dat Term: shared library not found. Re-run the installation steps." >&2
+    exit 1
+fi
+
+if [[ $# -ne 1 || -z "$1" ]]; then
+    echo "Usage: sdt-launch DESKTOP-FILE-ID" >&2
+    exit 2
+fi
+
+sdt_launch_desktop_id "$1"
