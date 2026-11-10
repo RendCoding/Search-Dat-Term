@@ -73,7 +73,8 @@ fi
     printf '}\n\n'
 } >> "$file"
 
+startup_file=$(sdt_enable_nicknames "$file")
+
 echo "Saved: $nick -> $name"
-echo "Add this line to your Bash startup file if it is not already there:"
-printf 'source %q\n' "$file"
-echo "Then open a new Bash session."
+printf 'Automatically enabled nickname loading in: %s\n' "$startup_file"
+echo "Open a new Bash session to use the nickname."
