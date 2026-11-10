@@ -30,7 +30,7 @@ Search Dat Term lets you find installed desktop applications from a terminal usi
 - **Create app nicknames** — use `addnick` to create a short shell command for an installed application.
 - **Automatic nickname loading** — `addnick` adds the nickname file to your Bash startup file automatically.
 - **Compact Kitty popup** — optional small terminal with a distro-aware compact Fastfetch summary and logo.
-- **Desktop integration** — supplied Hyprland rules and an installed desktop launcher for KDE Plasma shortcuts.
+- **Desktop integration** — supplied Hyprland rules plus setup instructions for KDE Plasma and other desktop environments.
 - **XDG application discovery** — checks user and system application directories, including common Flatpak and Snap exports.
 
 ## Requirements
