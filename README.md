@@ -78,6 +78,7 @@ Search Dat Term checks:
 - Each `applications` directory under `$XDG_DATA_DIRS` (defaults to `/usr/local/share:/usr/share`)
 - `~/.local/share/flatpak/exports/share/applications`
 - `/var/lib/flatpak/exports/share/applications`
+- `/var/lib/snapd/desktop/applications`
 
 Desktop entries marked `NoDisplay=true` or `Hidden=true`, and entries whose type is not `Application`, are skipped.
 
