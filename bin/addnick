@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+command -v fzf >/dev/null || {
+    echo "Please install fzf first."
+    exit 1
+}
+
+declare -A apps
+entries=()
+
+while IFS= read -r -d '' file; do
+    name=$(awk -F= '
+        /^\[Desktop Entry\]$/ { section=1; next }
+        /^\[/ { section=0 }
+        section && /^Name=/ { sub(/^Name=/, ""); print; exit }
+    ' "$file")
+
+    [[ -z "$name" ]] && continue
+    grep -q '^Type=Application' "$file" || continue
+    grep -q '^NoDisplay=true' "$file" && continue
+    grep -q '^Hidden=true' "$file" && continue
+
+    id=${file##*/}
+    id=${id%.desktop}
+    entry="$name  [$id]"
+    apps["$entry"]=$id
+    entries+=("$entry")
+done < <(
+    find "$HOME/.local/share/applications" \
+         /usr/share/applications \
+         /var/lib/flatpak/exports/share/applications \
+         "$HOME/.local/share/flatpak/exports/share/applications" \
+         -type f -name '*.desktop' -print0 2>/dev/null
+)
+
+choice=$(printf '%s\n' "${entries[@]}" |
+    sort -fu | fzf --prompt='Choose app > ' --layout=reverse)
+
+[[ -z "$choice" ]] && exit 0
+
+id=${apps[$choice]}
+name=${choice%  \[*}
+
+printf 'Nickname for %s: ' "$name"
+read -r nick
+
+if [[ ! "$nick" =~ ^[a-zA-Z][a-zA-Z0-9_-]*$ ]]; then
+    echo "Invalid nickname. Start with a letter; use only letters, numbers, _ or -."
+    exit 1
+fi
+
+file="$HOME/.config/niri/command/nicknames.sh"
+touch "$file"
+
+# Remove an existing nickname with the same name.
+if [[ -f "$file" ]]; then
+    sed -i "/^${nick}() {$/,/^}$/d" "$file"
+fi
+
+{
+    printf '%s() {\n' "$nick"
+    printf '    setsid -f gtk-launch %q >/dev/null 2>&1\n' "$id"
+    printf '}\n\n'
+} >> "$file"
+
+echo "Saved: $nick -> $name"
+echo "Close and reopen Arch Command to use it."
