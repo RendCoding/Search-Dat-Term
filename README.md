@@ -173,7 +173,7 @@ The historical `~/.config/niri/command/` paths are retained when existing files 
 
 ## Testing status
 
-Application discovery and launching have been tested on Void Linux. Nickname creation and manual nickname loading have also been tested there; the automatic startup integration is newly added and should be verified after updating. This does not mean every distribution, package format, or desktop environment has been tested.
+Application discovery and launching have been tested on Void Linux. Nickname creation and manual nickname loading have also been tested there; the automatic startup integration and compact Kitty popup are newly added and should be verified after updating. This does not mean every distribution, package format, or desktop environment has been tested.
 
 Please include your distribution, desktop environment, available launcher command, and any error output when reporting a problem.
 
