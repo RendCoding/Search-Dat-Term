@@ -10,6 +10,7 @@ Search Dat Term lets you find installed desktop applications from a terminal usi
 - **Launch applications** — launch the selected desktop entry using an available desktop launcher.
 - **Create app nicknames** — use `addnick` to create a short Bash function for an installed application.
 - **Automatic nickname loading** — `addnick` adds the nickname file to your Bash startup file automatically.
+- **Compact Kitty popup** — optional Hyprland `Super + R` launcher with a centered mini terminal, compact Fastfetch output, and distro-specific small logo.
 - **XDG application discovery** — checks user and system application directories.
 - **Flatpak and Snap discovery** — checks common export directories.
 - **Custom discovery paths** — add directories containing desktop-entry files with `SDT_EXTRA_APPLICATION_DIRS`.
@@ -46,6 +47,7 @@ Make sure `~/.local/bin` is in your `PATH`. You can override the command install
 | `terminal-app-search` | Opens an fzf list of discovered desktop applications and launches the selected app. |
 | `addnick` | Prompts for an application nickname, saves it, and enables automatic Bash loading. |
 | `sdt-launch` | Launches a desktop entry by its desktop-file ID. |
+| `sdt-popup` | Opens the compact Kitty search terminal. |
 
 ## Nicknames
 
@@ -73,6 +75,33 @@ addnick
 ```
 
 Open a new Bash session after creating the nickname. You can then run the nickname directly, for example `fox`. Generated functions use `sdt-launch`, which must be available on your `PATH`.
+
+## Compact Hyprland popup
+
+SDT includes an optional small Kitty terminal for the quick-launch workflow:
+
+1. Press `Super + R` to open a compact, centered Kitty window.
+2. The popup displays a short Fastfetch summary with the **small logo automatically detected for the current Linux distribution**.
+3. Type `search` and press Enter to open the SDT application picker.
+
+The popup uses Kitty and Fastfetch; the normal `terminal-app-search` command does not depend on either one. Fastfetch is optional, and the popup still opens if it is not installed.
+
+After installing SDT, add the supplied Hyprland snippet to your config:
+
+```ini
+source = ~/.config/hypr/sdt-popup.conf
+```
+
+Copy the snippet into that location first:
+
+```bash
+mkdir -p ~/.config/hypr
+cp config/hyprland/sdt-popup.conf ~/.config/hypr/sdt-popup.conf
+```
+
+Or copy the three lines from `config/hyprland/sdt-popup.conf` into your existing Hyprland config. The snippet defines the `Super + R` binding and makes only the `sdt-popup` Kitty window float, center, and open at 760×420 pixels. It does not edit or replace your existing Hyprland configuration. Reload Hyprland after adding it.
+
+Install `kitty` and `fastfetch` with your distribution's package manager. The popup's Fastfetch call uses `--logo-type small`, so Fastfetch chooses the compact logo for the detected distro rather than always showing the Arch logo.
 
 ## Application discovery
 
@@ -138,7 +167,7 @@ If the application has no `.desktop` file, SDT has no desktop entry to discover.
 
 ## Desktop environment
 
-The tools are terminal-based and do not require Hyprland, Niri, Kitty, or a particular terminal emulator. They must be run inside a graphical desktop session so launched applications can open.
+The core tools are terminal-based and do not require Hyprland, Niri, Kitty, or a particular terminal emulator. They must be run inside a graphical desktop session so launched applications can open. The optional `sdt-popup` feature specifically uses Kitty and its supplied keybind/window rules target Hyprland.
 
 The historical `~/.config/niri/command/` paths are retained when existing files are detected. They are legacy file locations, not a requirement to use Niri. The original Arch workflow remains supported through the GTK launcher and legacy nickname/config paths.
 
