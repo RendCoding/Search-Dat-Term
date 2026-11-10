@@ -1,6 +1,16 @@
 #!/usr/bin/env bash
 
-command -v fzf >/dev/null || {
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -f "$SCRIPT_DIR/../lib/search-dat-term.sh" ]]; then
+    source "$SCRIPT_DIR/../lib/search-dat-term.sh"
+elif [[ -f "${XDG_DATA_HOME:-$HOME/.local/share}/search-dat-term/search-dat-term.sh" ]]; then
+    source "${XDG_DATA_HOME:-$HOME/.local/share}/search-dat-term/search-dat-term.sh"
+else
+    echo "Search Dat Term: shared library not found. Re-run the installation steps." >&2
+    exit 1
+fi
+
+command -v fzf >/dev/null 2>&1 || {
     echo "Please install fzf first."
     exit 1
 }
@@ -25,13 +35,12 @@ while IFS= read -r -d '' file; do
     entry="$name  [$id]"
     apps["$entry"]=$id
     entries+=("$entry")
-done < <(
-    find "$HOME/.local/share/applications" \
-         /usr/share/applications \
-         /var/lib/flatpak/exports/share/applications \
-         "$HOME/.local/share/flatpak/exports/share/applications" \
-         -type f -name '*.desktop' -print0 2>/dev/null
-)
+done < <(sdt_find_desktop_files)
+
+(("${#entries[@]}" > 0)) || {
+    echo "Search Dat Term: no visible application desktop entries were found." >&2
+    exit 0
+}
 
 choice=$(printf '%s\n' "${entries[@]}" |
     sort -fu | fzf --prompt='Choose app > ' --layout=reverse)
@@ -49,19 +58,22 @@ if [[ ! "$nick" =~ ^[a-zA-Z][a-zA-Z0-9_-]*$ ]]; then
     exit 1
 fi
 
-file="$HOME/.config/niri/command/nicknames.sh"
+file=$(sdt_nicknames_file)
+mkdir -p "$(dirname -- "$file")"
 touch "$file"
 
-# Remove an existing nickname with the same name.
 if [[ -f "$file" ]]; then
     sed -i "/^${nick}() {$/,/^}$/d" "$file"
 fi
 
 {
     printf '%s() {\n' "$nick"
-    printf '    setsid -f gtk-launch %q >/dev/null 2>&1\n' "$id"
+    printf '    sdt-launch %q >/dev/null 2>&1 &\n' "$id"
     printf '}\n\n'
 } >> "$file"
 
+startup_file=$(sdt_enable_nicknames "$file")
+
 echo "Saved: $nick -> $name"
-echo "Close and reopen Arch Command to use it."
+printf 'Automatically enabled nickname loading in: %s\n' "$startup_file"
+echo "Open a new Bash session to use the nickname."
