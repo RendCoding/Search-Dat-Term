@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Open the compact Search Dat Term terminal.
+
+if ! command -v kitty >/dev/null 2>&1; then
+    printf '%s\n' 'Search Dat Term: Kitty is required for the popup terminal.' >&2
+    exit 1
+fi
+
+DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/search-dat-term"
+RC_FILE="$DATA_DIR/sdt-popup.bashrc"
+
+if [[ ! -f "$RC_FILE" ]]; then
+    printf 'Search Dat Term: popup shell config not found: %s\n' "$RC_FILE" >&2
+    printf '%s\n' 'Re-run bash install.sh from the Search Dat Term repository.' >&2
+    exit 1
+fi
+
+exec kitty --class sdt-popup --title "Search Dat Term" \
+    bash --noprofile --rcfile "$RC_FILE" -i
